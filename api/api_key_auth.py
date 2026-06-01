@@ -59,6 +59,29 @@ async def management_auth(
     elif authorization and authorization.lower().startswith("bearer "):
         provided = authorization[7:]
 
+# 🌟 這裡就是大腦端的 console.log！----------------------------------------------------------------------------------------------------------
+    print("\n" + "🛑 "*15 + " 🧠 【大腦接收端驗證 Debug】 " + "🛑 "*15)
+    print(f"  🔍 請求來源路徑: {request.url.path} (來自: {request.client.host if request.client else '?'})")
+    print(f"  🔍 大腦記憶體中認定的正確密鑰 [_MANAGEMENT_API_KEY]: '{_MANAGEMENT_API_KEY}'")
+    print(f"  🔍 後台實際送過來的客戶端密鑰 [provided]:            '{provided}'")
+    
+    if provided and _MANAGEMENT_API_KEY:
+        is_match = hmac.compare_digest(provided, _MANAGEMENT_API_KEY)
+        print(f"  ⚖️  兩者數學比對結果是否完全吻合? -> {is_match}")
+    print("🛑 "*43 + "\n")
+
+    if not _MANAGEMENT_API_KEY:
+        logger.critical(
+            "MANAGEMENT_API_KEY is not set — management API is effectively open. "
+            "Set MANAGEMENT_API_KEY in your .env file."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Management API is not configured. Set MANAGEMENT_API_KEY.",
+        )
+    
+    # 最終驗證：如果前台提供的密鑰（provided）與大腦記憶體中的正確密鑰（_MANAGEMENT_API_KEY）不完全匹配，則視為未授權請求，返回401錯誤。
+
     if not provided or not hmac.compare_digest(provided, _MANAGEMENT_API_KEY):
         logger.warning(f"Management API: unauthorized request (bad/missing key) path={request.url.path} from={request.client.host if request.client else '?'}")
         raise HTTPException(

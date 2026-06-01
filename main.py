@@ -217,8 +217,13 @@ async def main():
 
     # Handle shutdown signals
     loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, lambda: asyncio.create_task(_shutdown(tasks)))
+
+    try:
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(sig, lambda: asyncio.create_task(_shutdown(tasks)))
+    except NotImplementedError:
+        # Windows doesn't support add_signal_handler in ProactorEventLoop
+        pass
 
     logger.info(f"All services running. {len(tasks)} tasks active.")
 

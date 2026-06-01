@@ -43,6 +43,8 @@ alembic upgrade head
 
 # Start
 python main.py
+# source .venv/Scripts/activate
+# PYTHONUTF8=1 python main.py use this under windows
 ```
 
 Or run everything with Docker:
